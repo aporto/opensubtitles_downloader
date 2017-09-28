@@ -14,7 +14,7 @@ python osd.py <USERNAME> <PASSWORD> <MOVIES-FOLDER> <LANGUAGE-ID> [ALTERNATE-LAN
   
 Example:
 ```
-python osd.py jose 123456 c:\movies pob en
+python osd.py jose 123456 c:\movies pob eng
 ```
 This will search subtitles for every file found on c:\movies. It will try to find a Brazilian-Portuguese subtitle. If no one is found, it will search for an English version
 
