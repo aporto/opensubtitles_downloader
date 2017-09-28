@@ -209,7 +209,7 @@ def download_subtitles(initial_path, user, password, languages, recursive = True
 
 if __name__ == '__main__':
     if len(sys.argv) < 5:
-        print "Usage: v"
+        print "Usage: python osd.py <USERNAME> <PASSWORD> <MOVIES-FOLDER> <LANGUAGE-ID> [ALTERNATE-LANGUAGE-ID]..."
     else:
         username = sys.argv[1]
         password = sys.argv[2]
