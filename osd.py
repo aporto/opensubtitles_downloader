@@ -21,7 +21,7 @@ import difflib
 failed_list = []
 
 SUPORTED_VIDEO_EXTENSIONS = ['.mp4', '.avi', '.wmv', '.mkv']
-MAX_DOWNLOADS_PER_DAY = 199 # Limit set by OpenSubtitles.org, to avoid leechs
+MAX_DOWNLOADS_PER_DAY = 150 # Limit set by OpenSubtitles.org, to avoid leechs
 
 download_counter = 0
 
@@ -55,12 +55,12 @@ def _search_by_imdb(video_file_name, language, osub):
         name = file_name
         season = None
         episode = None
-        print "IMDB:", name + ",unknown season/episode"
+        print "(IMDB:", name + ",unknown season/episode)"
     else:
         name = tv[0][0]
         season = tv[0][1]
         episode = tv[0][2]
-        print "IMDB:", name + ", " + season + ", " + episode,
+        print "(IMDB:", name + ", " + season + ", " + episode + ")",
 
     name = name.replace('.', ' ')
     name = name.replace('_', ' ')
@@ -124,7 +124,7 @@ def _get_file_via_http(url, local_file_name):
         return
 
     in_file = os.path.join(sub_folder, srts[0])
-    shutil.copyfile(in_file, srt_name)
+    shutil.copyfile(in_file, local_file_name)
 
 def _download_single_subtitle(video_file_name, languages, osub):
     global download_counter
@@ -180,15 +180,19 @@ def _download_subtitles_at_path(path, osub, languages, recursive):
     files = os.listdir(path)
     for f in files:
         full_path = os.path.join(path, f)
-        if os.path.isdir(full_path) and recursive:
-            _download_subtitles_at_path(full_path, osub, True)
-        else:
+        if os.path.isfile(full_path):
             ext = os.path.splitext(full_path)[1].lower()
             if ext in SUPORTED_VIDEO_EXTENSIONS:
                 if _download_single_subtitle(full_path, languages, osub) == False:
                     return False
 
-    print ""
+    for f in files:
+        full_path = os.path.join(path, f)
+        if os.path.isdir(full_path) and recursive:
+            _download_subtitles_at_path(full_path, osub, languages, True)
+
+
+    #print ""
     return True
 
 def download_subtitles(initial_path, user, password, languages, recursive = True):
