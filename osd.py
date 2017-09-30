@@ -26,6 +26,11 @@ MAX_DOWNLOADS_PER_DAY = 150 # Limit set by OpenSubtitles.org, to avoid leechs
 download_counter = 0
 
 def _erase_all_files_in_folder(path):
+    '''
+    Remove all files for a given directory
+    Used to clean the temp download folders before downloading or
+    extracting new subtitles
+    '''
     for the_file in os.listdir(path):
         file_path = os.path.join(path, the_file)
         try:
@@ -37,6 +42,10 @@ def _erase_all_files_in_folder(path):
             print(e)
 
 def _clean_file_name(file_name):
+    '''
+    Clean up a video file name, removing ripper tags and other useless text
+    that could prevent identifying the correct movie name from it
+    '''
     for c in ['[', ']']:
         if c in file_name:
             file_name = file_name[:file_name.find(c)]
@@ -46,6 +55,10 @@ def _clean_file_name(file_name):
     return file_name
 
 def _search_by_imdb(video_file_name, language, osub):
+    '''
+    Extrace search info from video file name (name, episode, season, etc)
+    Use this info on imdb.com to correctly identify the video file
+    '''
     file_name = os.path.basename(video_file_name)
     file_name = os.path.splitext(file_name)[0]
 
@@ -80,18 +93,33 @@ def _search_by_imdb(video_file_name, language, osub):
 
     if season and episode:
         if imdb_id:
+            # Best info available for searching
+            # imdb id found: Use it for the search
+            # season and episode also used on search
             data = osub.search_subtitles([{'sublanguageid': language, 'imdbid': imdb_id, "season": season, 'episode': episode}])
         else:
+            # 2nd best search info
+            # imdb id not found: Try searching for the movie/series name identified from the filename
+            # imdb id found: Use it for the search
             data = osub.search_subtitles([{'sublanguageid': language, 'movie name': name, "season": season, 'episode': episode}])
     else:
         if imdb_id:
+            # Not so good search info
+            # imdb id found: Use it for the search
+            # seasong and episode not available
             data = osub.search_subtitles([{'sublanguageid': language, 'imdbid': imdb_id}])
         else:
+            # Worst info for searching
+            # No imdb id, no season/episode.
+            # Try searching using only the movie/series name extracted from the filename
             data = osub.search_subtitles([{'sublanguageid': language, 'movie name': name}])
 
     return data
 
 def _get_file_via_http(url, local_file_name):
+    '''
+    Download the compressed subtitle from web, and unzip it
+    '''
     print "downloading...",
 
     path = os.path.dirname(__file__)
@@ -147,17 +175,20 @@ def _download_single_subtitle(video_file_name, languages, osub):
     assert type(hash) == str
     size = f.size
 
+    # Try searching for a subtitle created by this exact video file, using hash
     for language in languages:
         data = osub.search_subtitles([{'sublanguageid': language, 'moviehash': hash, 'moviebytesize': size}])
         if len(data) > 0:
             break
 
+    # No subtitle found for this file, try searching using IMDB information
     if len(data) < 1:
         for language in languages:
             data = _search_by_imdb(video_file_name, language, osub)
             if len(data) > 0:
                 break
 
+    # No subtitle found using the provided information: Give up to try the next file
     if len(data) < 1:
         failed_list.append(video_file_name)
         print "-> Not found"
@@ -165,8 +196,10 @@ def _download_single_subtitle(video_file_name, languages, osub):
 
     url = data[0]['SubDownloadLink']
 
+    # Try downloading the file
     _get_file_via_http(url, srt_name)
 
+    # Finally, check if the expected file was correctly created
     if os.path.isfile(srt_name):
         print "-> Success!"
     else:
@@ -176,6 +209,10 @@ def _download_single_subtitle(video_file_name, languages, osub):
     return True
 
 def _download_subtitles_at_path(path, osub, languages, recursive):
+    '''
+    Search all subdirectories, recursivelly, calling the function
+    that downloads a subtitle whenever a video file is found
+    '''
     print path + ":"
     files = os.listdir(path)
     for f in files:
@@ -191,11 +228,13 @@ def _download_subtitles_at_path(path, osub, languages, recursive):
         if os.path.isdir(full_path) and recursive:
             _download_subtitles_at_path(full_path, osub, languages, True)
 
-
-    #print ""
     return True
 
 def download_subtitles(initial_path, user, password, languages, recursive = True):
+    '''
+    Logins into opensubtitles.org and start the recursive search
+    '''
+
     osub = OpenSubtitles()
     token = osub.login(user, password)
     if token == None:
