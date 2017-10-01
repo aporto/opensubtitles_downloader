@@ -22,6 +22,7 @@ import time
 import datetime
 
 failed_list = []
+skipped_files = 0
 
 SUPORTED_VIDEO_EXTENSIONS = ['.mp4', '.avi', '.wmv', '.mkv']
 TAG_LIST = ['hdtv', '1080', '720', 'x264', 'amzn', 'webrip', 'repack', 'proper',
@@ -35,7 +36,11 @@ failed_list_file = os.path.join(os.path.dirname(__file__), 'config', 'failed_lis
 config_file = os.path.join(os.path.dirname(__file__), 'config', 'config.json')
 config = {
     'last_download_date':None,
-    'today_download_count':0}
+    'today_download_count':0,
+    'username':'',
+    'password':'',
+    'languages': [],
+    'initial_path': ''}
 
 def _append_failed_file(video_file_name):
     if os.path.isfile(failed_list_file):
@@ -98,7 +103,7 @@ def _search_by_imdb(video_file_name, language, osub):
         name = file_name
         season = None
         episode = None
-        print "(IMDB:", name + ",unknown season/episode)"
+        print "(IMDB:", name + ",unknown season/episode)",
     else:
         name = tv[0][0]
         season = tv[0][1]
@@ -170,9 +175,14 @@ def _get_file_via_http(url, local_file_name):
     _erase_all_files_in_folder(sub_folder)
     _erase_all_files_in_folder(zip_folder)
 
-    response = urllib2.urlopen(url)
-    html = response.read()
     ext = os.path.splitext(url)[1]
+    try:
+        response = urllib2.urlopen(url)
+        html = response.read()
+    except:
+        _append_failed_file(video_file_name)
+        print "-> download failed!"
+        return False
 
     zip_file = os.path.join(zip_folder, 'subtitle' + ext)
     with open(zip_file, 'wb') as df:
@@ -186,22 +196,12 @@ def _get_file_via_http(url, local_file_name):
     if len(srts) < 1:
         _append_failed_file(video_file_name)
         print "-> No sub downloaded!"
-        return
+        return False
 
     in_file = os.path.join(sub_folder, srts[0])
     shutil.copyfile(in_file, local_file_name)
 
-def _download_single_subtitle(video_file_name, languages, osub):
-    if video_file_name in failed_list:
-        # Skiiping file that was already checked and failed
-        return True
-
-    base_name = os.path.splitext(os.path.basename(video_file_name))[0]
-    srt_name = os.path.join(os.path.dirname(video_file_name), base_name + ".srt")
-    if os.path.isfile(srt_name):
-        #print "-> Already exists"
-        return True
-
+def _download_single_subtitle(video_file_name, srt_name, languages, osub):
     #global download_counter
     if config['today_download_count'] >= MAX_DOWNLOADS_PER_DAY:
         print "Daily downloads limit reached!"
@@ -258,15 +258,31 @@ def _download_subtitles_at_path(path, osub, languages, recursive):
     Search all subdirectories, recursivelly, calling the function
     that downloads a subtitle whenever a video file is found
     '''
-    print path
+    global skipped_files
     files = os.listdir(path)
+    files_to_search = []
     for f in files:
         full_path = os.path.join(path, f)
+        if full_path in failed_list:
+            skipped_files += 1
+            # Skiiping file that was already checked and failed
+            continue
+
         if os.path.isfile(full_path):
             ext = os.path.splitext(full_path)[1].lower()
             if ext in SUPORTED_VIDEO_EXTENSIONS:
-                if _download_single_subtitle(full_path, languages, osub) == False:
-                    return False
+                base_name = os.path.splitext(os.path.basename(full_path))[0]
+                srt_name = os.path.join(os.path.dirname(full_path), base_name + ".srt")
+                if not os.path.isfile(srt_name):
+                    files_to_search.append((full_path, srt_name))
+                else:
+                    skipped_files += 1
+
+    if len(files_to_search) > 0:
+        print path
+        for f in files_to_search:
+            if _download_single_subtitle(f[0], f[1], languages, osub) == False:
+                return False
 
     for f in files:
         full_path = os.path.join(path, f)
@@ -290,7 +306,12 @@ def download_subtitles(initial_path, user, password, languages, recursive = True
     if config['last_download_date'] != today:
         config['last_download_date'] = today
         config['today_download_count'] = 0
-        _save_config()
+
+    config['username'] = user
+    config['password'] = password
+    config['languages'] = languages
+    config['initial_path'] = languages
+    _save_config()
 
     if os.path.isfile(failed_list_file):
         with open(failed_list_file) as f:
@@ -306,6 +327,8 @@ def download_subtitles(initial_path, user, password, languages, recursive = True
     _download_subtitles_at_path(initial_path, osub, languages, recursive)
 
     osub.logout()
+
+    print "Done!\n%d video files not considered during this search\n(Either already had subtitle or had failed in a previous search)" % (skipped_files)
 
     #$with open(failed_list_file, 'w') as f:
     #    for item in failed_list:
