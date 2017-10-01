@@ -17,13 +17,33 @@ import subprocess
 import shutil
 import re
 import difflib
+import json
+import time
+import datetime
 
 failed_list = []
 
 SUPORTED_VIDEO_EXTENSIONS = ['.mp4', '.avi', '.wmv', '.mkv']
+TAG_LIST = ['hdtv', '1080', '720', 'x264', 'amzn', 'webrip', 'repack', 'proper',
+            'xvid', '480', 'aac', 'youtube', 'dvdrip', 'bluray', 'bdrip', '2hd',
+            'internal', 'pdtv', 'brrip']
 MAX_DOWNLOADS_PER_DAY = 150 # Limit set by OpenSubtitles.org, to avoid leechs
 
-download_counter = 0
+#download_counter = 0
+
+failed_list_file = os.path.join(os.path.dirname(__file__), 'config', 'failed_list.txt')
+config_file = os.path.join(os.path.dirname(__file__), 'config', 'config.json')
+config = {
+    'last_download_date':None,
+    'today_download_count':0}
+
+def _append_failed_file(video_file_name):
+    if os.path.isfile(failed_list_file):
+        with open(failed_list_file, 'a') as f:
+            f.write(video_file_name + '\n')
+    else:
+        with open(failed_list_file, 'w') as f:
+            f.write(video_file_name + '\n')
 
 def _erase_all_files_in_folder(path):
     '''
@@ -46,9 +66,19 @@ def _clean_file_name(file_name):
     Clean up a video file name, removing ripper tags and other useless text
     that could prevent identifying the correct movie name from it
     '''
-    for c in ['[', ']']:
+
+    # Remove useless characters
+    for c in ['[', ']', '_']:
         if c in file_name:
             file_name = file_name[:file_name.find(c)]
+
+    # Remove dots/period when used as white-spaces
+    if file_name.count('.') > 1:
+        file_name = file_name.replace('.', ' ')
+
+    for tag in TAG_LIST:
+        if tag in file_name.lower():
+            file_name = file_name[:file_name.lower().find(tag)]
 
     file_name = file_name.strip()
 
@@ -113,14 +143,21 @@ def _search_by_imdb(video_file_name, language, osub):
             # No imdb id, no season/episode.
             # Try searching using only the movie/series name extracted from the filename
             data = osub.search_subtitles([{'sublanguageid': language, 'movie name': name}])
-
     return data
+
+def _save_config():
+    with open(config_file, 'w') as f:
+        json.dump(config, f)
 
 def _get_file_via_http(url, local_file_name):
     '''
     Download the compressed subtitle from web, and unzip it
     '''
-    print "downloading...",
+    #global download_counter
+    #download_counter += 1
+    config['today_download_count'] = config['today_download_count'] + 1
+    _save_config()
+    print "downloading (%d)..." % (config['today_download_count']),
 
     path = os.path.dirname(__file__)
     sub_folder = os.path.join(path, 'temp_sub')
@@ -147,7 +184,7 @@ def _get_file_via_http(url, local_file_name):
     srts = os.listdir(sub_folder)
 
     if len(srts) < 1:
-        failed_list.append(video_file_name)
+        _append_failed_file(video_file_name)
         print "-> No sub downloaded!"
         return
 
@@ -155,20 +192,22 @@ def _get_file_via_http(url, local_file_name):
     shutil.copyfile(in_file, local_file_name)
 
 def _download_single_subtitle(video_file_name, languages, osub):
-    global download_counter
-    download_counter += 1
-    if download_counter >= MAX_DOWNLOADS_PER_DAY:
-        print "Daily downloads limit reached!"
-        return False
-
-    global failed_list
-    print '\t' + os.path.basename(video_file_name),
+    if video_file_name in failed_list:
+        # Skiiping file that was already checked and failed
+        return True
 
     base_name = os.path.splitext(os.path.basename(video_file_name))[0]
     srt_name = os.path.join(os.path.dirname(video_file_name), base_name + ".srt")
     if os.path.isfile(srt_name):
-        print "-> Already exists"
+        #print "-> Already exists"
         return True
+
+    #global download_counter
+    if config['today_download_count'] >= MAX_DOWNLOADS_PER_DAY:
+        print "Daily downloads limit reached!"
+        return False
+
+    print '\t' + os.path.basename(video_file_name),
 
     f = osu.File(video_file_name)
     hash = f.get_hash()
@@ -177,20 +216,26 @@ def _download_single_subtitle(video_file_name, languages, osub):
 
     # Try searching for a subtitle created by this exact video file, using hash
     for language in languages:
-        data = osub.search_subtitles([{'sublanguageid': language, 'moviehash': hash, 'moviebytesize': size}])
+        try:
+            data = osub.search_subtitles([{'sublanguageid': language, 'moviehash': hash, 'moviebytesize': size}])
+        except:
+            data = []
         if len(data) > 0:
             break
 
     # No subtitle found for this file, try searching using IMDB information
     if len(data) < 1:
         for language in languages:
-            data = _search_by_imdb(video_file_name, language, osub)
+            try:
+                data = _search_by_imdb(video_file_name, language, osub)
+            except:
+                data = []
             if len(data) > 0:
                 break
 
     # No subtitle found using the provided information: Give up to try the next file
     if len(data) < 1:
-        failed_list.append(video_file_name)
+        _append_failed_file(video_file_name)
         print "-> Not found"
         return True
 
@@ -204,7 +249,7 @@ def _download_single_subtitle(video_file_name, languages, osub):
         print "-> Success!"
     else:
         print "-> Failed"
-        failed_list.append(video_file_name)
+        _append_failed_file(video_file_name)
 
     return True
 
@@ -213,7 +258,7 @@ def _download_subtitles_at_path(path, osub, languages, recursive):
     Search all subdirectories, recursivelly, calling the function
     that downloads a subtitle whenever a video file is found
     '''
-    print path + ":"
+    print path
     files = os.listdir(path)
     for f in files:
         full_path = os.path.join(path, f)
@@ -234,6 +279,23 @@ def download_subtitles(initial_path, user, password, languages, recursive = True
     '''
     Logins into opensubtitles.org and start the recursive search
     '''
+    global config
+    global failed_list
+
+    if os.path.isfile(config_file):
+        with open(config_file) as f:
+            config = json.load(f)
+
+    today = datetime.date.today().strftime("%Y%m%d")
+    if config['last_download_date'] != today:
+        config['last_download_date'] = today
+        config['today_download_count'] = 0
+        _save_config()
+
+    if os.path.isfile(failed_list_file):
+        with open(failed_list_file) as f:
+            failed_list = f.readlines()
+            failed_list = [x.strip() for x in failed_list]
 
     osub = OpenSubtitles()
     token = osub.login(user, password)
@@ -245,9 +307,9 @@ def download_subtitles(initial_path, user, password, languages, recursive = True
 
     osub.logout()
 
-    with open(os.path.join(os.path.dirname(__file__), 'failed_list.txt'), 'w') as f:
-        for item in failed_list:
-            f.write("%s\n" % (item))
+    #$with open(failed_list_file, 'w') as f:
+    #    for item in failed_list:
+    #        f.write("%s\n" % (item))
     return True
 
 if __name__ == '__main__':
