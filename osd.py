@@ -188,7 +188,13 @@ def _get_file_via_http(url, local_file_name):
     with open(zip_file, 'wb') as df:
         df.write(html)
 
-    cmd = [r'C:\Program Files\7-Zip\7zG.exe', 'x', zip_file, '-o' + sub_folder]
+    if os.name == 'nt':
+        seven_zip = os.path.join(os.path.dirname(__file__), 'windows', '7za.exe')
+        cmd = [seven_zip, 'x', zip_file, '-o' + sub_folder]
+    else:
+        seven_zip = 'gz' # TODO: This is not correct for non-Windows
+        cmd = [seven_zip, 'x', zip_file, '-o' + sub_folder]
+
     r = subprocess.check_call(cmd)
 
     srts = os.listdir(sub_folder)
