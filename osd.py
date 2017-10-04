@@ -180,7 +180,6 @@ def _get_file_via_http(url, local_file_name):
         response = urllib2.urlopen(url)
         html = response.read()
     except:
-        _append_failed_file(video_file_name)
         print "-> download failed!"
         return False
 
@@ -195,12 +194,13 @@ def _get_file_via_http(url, local_file_name):
         seven_zip = 'gz' # TODO: This is not correct for non-Windows
         cmd = [seven_zip, 'x', zip_file, '-o' + sub_folder]
 
-    r = subprocess.check_call(cmd)
+    FNULL = open(os.devnull, 'w')
+    r = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+    #r = subprocess.check_call(cmd)
 
     srts = os.listdir(sub_folder)
 
     if len(srts) < 1:
-        _append_failed_file(video_file_name)
         print "-> No sub downloaded!"
         return False
 
@@ -248,7 +248,8 @@ def _download_single_subtitle(video_file_name, srt_name, languages, osub):
     url = data[0]['SubDownloadLink']
 
     # Try downloading the file
-    _get_file_via_http(url, srt_name)
+    if not _get_file_via_http(url, srt_name):
+        _append_failed_file(video_file_name)
 
     # Finally, check if the expected file was correctly created
     if os.path.isfile(srt_name):
