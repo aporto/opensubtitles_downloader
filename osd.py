@@ -32,8 +32,17 @@ MAX_DOWNLOADS_PER_DAY = 150 # Limit set by OpenSubtitles.org, to avoid leechs
 
 #download_counter = 0
 
-failed_list_file = os.path.join(os.path.dirname(__file__), 'config', 'failed_list.txt')
-config_file = os.path.join(os.path.dirname(__file__), 'config', 'config.json')
+if getattr(sys, 'frozen', False):
+    # If the application is run as a bundle, the pyInstaller bootloader
+    # extends the sys module by a flag frozen=True and sets the app
+    # path into variable _MEIPASS'.
+    application_path = sys._MEIPASS
+else:
+    application_path = os.path.dirname(os.path.abspath(__file__))
+
+
+failed_list_file = os.path.join(application_path, 'config', 'failed_list.txt')
+config_file = os.path.join(application_path, 'config', 'config.json')
 config = {
     'last_download_date':None,
     'today_download_count':0,
@@ -108,7 +117,7 @@ def _search_by_imdb(video_file_name, language, osub):
         name = tv[0][0]
         season = tv[0][1]
         episode = tv[0][2]
-        print "(IMDB:", name + ", " + season + ", " + episode + ")",
+        print "(IMDB:%s, S%sE%s)" % (name, season, episode),
 
     name = name.replace('.', ' ')
     name = name.replace('_', ' ')
@@ -152,7 +161,8 @@ def _search_by_imdb(video_file_name, language, osub):
 
 def _save_config():
     with open(config_file, 'w') as f:
-        json.dump(config, f)
+        str = json.dumps(config, indent=4, sort_keys=True)
+        f.write(str)
 
 def _get_file_via_http(url, local_file_name):
     '''
@@ -164,7 +174,7 @@ def _get_file_via_http(url, local_file_name):
     _save_config()
     print "downloading (%d)..." % (config['today_download_count']),
 
-    path = os.path.dirname(__file__)
+    path = application_path
     sub_folder = os.path.join(path, 'temp_sub')
     zip_folder = os.path.join(path, 'temp_zip')
     if not os.path.exists(sub_folder):
@@ -188,7 +198,7 @@ def _get_file_via_http(url, local_file_name):
         df.write(html)
 
     if os.name == 'nt':
-        seven_zip = os.path.join(os.path.dirname(__file__), 'windows', '7za.exe')
+        seven_zip = os.path.join(application_path, 'windows', '7za.exe')
         cmd = [seven_zip, 'x', zip_file, '-o' + sub_folder]
     else:
         seven_zip = 'gz' # TODO: This is not correct for non-Windows
@@ -314,11 +324,27 @@ def download_subtitles(initial_path, user, password, languages, recursive = True
         config['last_download_date'] = today
         config['today_download_count'] = 0
 
-    config['username'] = user
-    config['password'] = password
+    if user == None:
+        user = config['username']
+    else:
+        config['username'] = user
+    if user != None:
+        password = config['password']
+    else:
+        config['password'] = password
+
     config['languages'] = languages
     config['initial_path'] = languages
     _save_config()
+
+    if user == None or password == None:
+        print '''
+        ERROR: You need to provide login info for OpenSubitles. Either:\n
+            - Pass user/password
+              OR
+            - Edit config/config.json to set a fix user/password
+        '''
+        return False
 
     if os.path.isfile(failed_list_file):
         with open(failed_list_file) as f:
@@ -350,6 +376,12 @@ if __name__ == '__main__':
         password = sys.argv[2]
         path = sys.argv[3]
         languages = sys.argv[4:]
+        print "Searching:", path
+
+        if username == "":
+            username = None
+        if password == "":
+            password = None
 
         download_subtitles(path, username, password, languages)
 
