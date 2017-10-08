@@ -1,9 +1,31 @@
 # opensubtitles_downloader
 A tool that automatically search and download subtitles for your video files
 
+# Installing
+If you're running on Windows, there is a installer that will set everything for you:
+1) Download the[https://github.com/aporto/opensubtitles_downloader/archive/master.zip zip file from GitHub]
+2) Unzip it on any folder you want to store the program.
+3) Execute the file Windows\installer.exe
+4) Follow the instructions on screen:
 
-# Usage
-Simple call it from your prompt:
+The installer will ask for username and password for OpenSubtitles.org. If you don't have this information, go to the website and register
+![alt text](https://github.com/aporto/opensubtitles_downloader/blob/master/images/login_check.png)
+
+The installer will show this message, informing that it needs permission to configure Windows to add a context-menu to Windows Explorer
+![alt text](https://github.com/aporto/opensubtitles_downloader/blob/master/images/registry_editor.png)
+
+
+# Usage (simplified)
+Using Windows Exploer, right click the folder where your video files are stored. If the installation was correct, you should see the option "Download subtitles":
+![alt text](https://github.com/aporto/opensubtitles_downloader/blob/master/images/context_menu.png)
+
+When you select the option "Download subtitles", you shall see this window, showing the search/download progress:
+![alt text](https://github.com/aporto/opensubtitles_downloader/blob/master/images/download.png)
+
+When the download is finished, check your video folder. You will find all subtitles (That the program found) already renamed with the same video file name
+
+# Usage (advanced)
+If you're not afraid of command-line programs, simple call it from your prompt:
 ```
 python osd.py <USERNAME> <PASSWORD> <MOVIES-FOLDER> <LANGUAGE-ID> [ALTERNATE-LANGUAGE-ID]...
 ```
