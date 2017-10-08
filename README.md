@@ -3,7 +3,7 @@ A tool that automatically search and download subtitles for your video files
 
 # Installing
 If you're running on Windows, there is a installer that will set everything for you:
-1) Download the[https://github.com/aporto/opensubtitles_downloader/archive/master.zip zip file from GitHub]
+1) Download the zip file: [https://github.com/aporto/opensubtitles_downloader/archive/master.zip]
 2) Unzip it on any folder you want to store the program.
 3) Execute the file Windows\installer.exe
 4) Follow the instructions on screen:
