@@ -1,2 +1,0 @@
-pyinstaller ..\osd.py
-pause

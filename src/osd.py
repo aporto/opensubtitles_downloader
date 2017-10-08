@@ -41,15 +41,10 @@ else:
     application_path = os.path.dirname(os.path.abspath(__file__))
 
 
-failed_list_file = os.path.join(application_path, 'config', 'failed_list.txt')
-config_file = os.path.join(application_path, 'config', 'config.json')
-config = {
-    'last_download_date':None,
-    'today_download_count':0,
-    'username':'',
-    'password':'',
-    'languages': [],
-    'initial_path': ''}
+failed_list_file = os.path.join(application_path, '..', 'config', 'failed_list.txt')
+config_file = os.path.join(application_path, '..', 'config', 'config.json')
+
+from config import config as config
 
 def _append_failed_file(video_file_name):
     if os.path.isfile(failed_list_file):
@@ -198,7 +193,7 @@ def _get_file_via_http(url, local_file_name):
         df.write(html)
 
     if os.name == 'nt':
-        seven_zip = os.path.join(application_path, 'windows', '7za.exe')
+        seven_zip = os.path.join(application_path, '7za.exe')
         cmd = [seven_zip, 'x', zip_file, '-o' + sub_folder]
     else:
         seven_zip = 'gz' # TODO: This is not correct for non-Windows
@@ -334,7 +329,7 @@ def download_subtitles(initial_path, user, password, languages, recursive = True
         config['password'] = password
 
     config['languages'] = languages
-    config['initial_path'] = languages
+    config['initial_path'] = initial_path
     _save_config()
 
     if user == None or password == None:
