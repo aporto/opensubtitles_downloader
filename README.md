@@ -43,12 +43,8 @@ This will search subtitles for every file found on c:\movies. It will try to fin
 # Languages id
 Check the file config/languages.csv to find out the id for your language
 
-# Dependencies
-This script requires 7-zip. You must have it installed on your computer. If you're not running this on Windows, you change change the code to work with your preferred zip extractor. 
-
 # Planned future improvements
 * Create a GUI interface
-* Embed a Python zip library, to remove  the dependency on 7-zip installation
 
 # Notes
 This code is based on [https://github.com/agonzalezro/python-opensubtitles Python OpenSubtitles] library, by [https://github.com/agonzalezro Alexandre Gonzalez]
