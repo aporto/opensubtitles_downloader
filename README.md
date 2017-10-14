@@ -1,19 +1,23 @@
-# opensubtitles_downloader
-A tool that automatically search and download subtitles for your video files
+# OpenSubtitles Downloader
+This tool automatically downloads the correct subtitle for all your movies.
+
+You simply right-click the folder where your videos are saved, the select "Download subtitles". It will use an internal algorithm to detect the correct subtitle for each video file. If the exact subrtitle is not available, it will download the best available subtitle.
+
+# Download
+1) Download the following zip file:
+[https://github.com/aporto/opensubtitles_downloader/archive/master.zip]
 
 # Installing
 If you're running on Windows, there is a installer that will set everything for you:
-1) Download the zip file: [https://github.com/aporto/opensubtitles_downloader/archive/master.zip]
-2) Unzip it on any folder you want to store the program.
-3) Execute the file Windows\installer.exe
-4) Follow the instructions on screen:
+1) Unzip the downloaded file on any folder you want to store the program.
+2) Execute the file Windows\installer.exe
+3) Follow the instructions on screen:
 
 The installer will ask for username and password for OpenSubtitles.org. If you don't have this information, go to the website and register
 ![alt text](https://github.com/aporto/opensubtitles_downloader/blob/master/images/login_check.png)
 
 The installer will show this message, informing that it needs permission to configure Windows to add a context-menu to Windows Explorer
 ![alt text](https://github.com/aporto/opensubtitles_downloader/blob/master/images/registry_editor.png)
-
 
 # Usage (simplified)
 Using Windows Exploer, right click the folder where your video files are stored. If the installation was correct, you should see the option "Download subtitles":
