@@ -24,6 +24,9 @@ import datetime
 failed_list = []
 skipped_files = 0
 
+success_downloads = 0
+failed_downloads = 0
+
 SUPORTED_VIDEO_EXTENSIONS = ['.mp4', '.avi', '.wmv', '.mkv']
 TAG_LIST = ['hdtv', '1080', '720', 'x264', 'amzn', 'webrip', 'repack', 'proper',
             'xvid', '480', 'aac', 'youtube', 'dvdrip', 'bluray', 'bdrip', '2hd',
@@ -259,8 +262,10 @@ def _download_single_subtitle(video_file_name, srt_name, languages, osub):
     # Finally, check if the expected file was correctly created
     if os.path.isfile(srt_name):
         print "-> Success!"
+        success_downloads += 1
     else:
         print "-> Failed"
+        failed_downloads += 1
         _append_failed_file(video_file_name)
 
     return True
@@ -356,7 +361,16 @@ def download_subtitles(initial_path, user, password, languages, recursive = True
 
     osub.logout()
 
-    print "Done!\n%d video files not considered during this search\n(Either already had subtitle or had failed in a previous search)" % (skipped_files)
+    remaining_downloads = MAX_DOWNLOADS_PER_DAY - config['today_download_count']
+
+    print "Done!"
+    print "%d subtitles downloaded at this session" % (success_downloads)
+    print "%d downloads failed at this session" % (failed_downloads)
+    print "You can still download %d subtitles today from OpenSubtitles.org (Max per day:%d)" % (remaining_downloads, MAX_DOWNLOADS_PER_DAY)
+    print ""
+    print "%d video files not considered during this search\n(Either already had subtitle or had failed in a previous search)" % (skipped_files)
+    print "(If you want to try downloading them again, please remove their names from the following file, or delete this file)"
+    print failed_list_file
 
     #$with open(failed_list_file, 'w') as f:
     #    for item in failed_list:
