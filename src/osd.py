@@ -262,9 +262,11 @@ def _download_single_subtitle(video_file_name, srt_name, languages, osub):
     # Finally, check if the expected file was correctly created
     if os.path.isfile(srt_name):
         print "-> Success!"
+        global success_downloads
         success_downloads += 1
     else:
         print "-> Failed"
+        global failed_downloads
         failed_downloads += 1
         _append_failed_file(video_file_name)
 
