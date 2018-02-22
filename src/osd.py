@@ -46,6 +46,7 @@ else:
 
 failed_list_file = os.path.join(application_path, '..', 'config', 'failed_list.txt')
 config_file = os.path.join(application_path, '..', 'config', 'config.json')
+seven_zip = os.path.join(application_path, '..', 'windows', '7za.exe')
 
 from config import config as config
 
@@ -196,10 +197,10 @@ def _get_file_via_http(url, local_file_name):
         df.write(html)
 
     if os.name == 'nt':
-        seven_zip = os.path.join(application_path, '7za.exe')
+        #seven_zip = os.path.join(application_path, '7za.exe')
         cmd = [seven_zip, 'x', zip_file, '-o' + sub_folder]
     else:
-        seven_zip = 'gz' # TODO: This is not correct for non-Windows
+        #seven_zip = 'gz' # TODO: This is not correct for non-Windows
         cmd = [seven_zip, 'x', zip_file, '-o' + sub_folder]
 
     FNULL = open(os.devnull, 'w')
@@ -214,6 +215,7 @@ def _get_file_via_http(url, local_file_name):
 
     in_file = os.path.join(sub_folder, srts[0])
     shutil.copyfile(in_file, local_file_name)
+    return True
 
 def _download_single_subtitle(video_file_name, srt_name, languages, osub):
     #global download_counter
@@ -353,11 +355,17 @@ def download_subtitles(initial_path, user, password, languages, recursive = True
             failed_list = f.readlines()
             failed_list = [x.strip() for x in failed_list]
 
-    osub = OpenSubtitles()
-    token = osub.login(user, password)
-    if token == None:
-        print "---> Error. Invalid username/password. Please check your login information with OpenSubtitles.org"
+    try:
+        osub = OpenSubtitles()
+        print "Connecting to OpenSubtitles.org..."
+        token = osub.login(user, password)
+        if token == None:
+            print "---> Error. Invalid username/password. Please check your login information with OpenSubtitles.org"
+            return False
+    except:
+        print "---> Error. Could not connect to OpenSubtitles.org"
         return False
+
 
     _download_subtitles_at_path(initial_path, osub, languages, recursive)
 
