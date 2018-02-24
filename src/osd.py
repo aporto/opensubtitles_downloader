@@ -355,16 +355,25 @@ def download_subtitles(initial_path, user, password, languages, recursive = True
             failed_list = f.readlines()
             failed_list = [x.strip() for x in failed_list]
 
-    try:
-        osub = OpenSubtitles()
-        print "Connecting to OpenSubtitles.org..."
-        token = osub.login(user, password)
-        if token == None:
-            print "---> Error. Invalid username/password. Please check your login information with OpenSubtitles.org"
-            return False
-    except:
-        print "---> Error. Could not connect to OpenSubtitles.org"
-        return False
+    print "Connecting to OpenSubtitles.org..."
+    osub = OpenSubtitles()
+    for i in range(6):
+        try:
+            time.sleep(1)
+            #t = 2 / 0
+            token = osub.login(user, password)
+
+            if token == None:
+                print "---> Error. Invalid username/password. Please check your login information with OpenSubtitles.org"
+                return False
+            else:
+                break
+        except:
+            if i < 5:
+                print "---> Connection trial #%d failed" % (i+1)
+            else:
+                print "ERROR: Could not connect to OpenSubtitle.org"
+                return False
 
 
     _download_subtitles_at_path(initial_path, osub, languages, recursive)
