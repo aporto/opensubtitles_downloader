@@ -284,10 +284,11 @@ def _download_subtitles_at_path(path, osub, languages, recursive):
     files_to_search = []
     for f in files:
         full_path = os.path.join(path, f)
-        if full_path in failed_list:
-            skipped_files += 1
-            # Skiiping file that was already checked and failed
-            continue
+        if not config['ignore_previously_failed']:
+            if full_path in failed_list:
+                skipped_files += 1
+                # Skiiping file that was already checked and failed
+                continue
 
         if os.path.isfile(full_path):
             ext = os.path.splitext(full_path)[1].lower()
@@ -339,6 +340,8 @@ def download_subtitles(initial_path, user, password, languages, recursive = True
 
     config['languages'] = languages
     config['initial_path'] = initial_path
+    if not config.has_key('ignore_previously_failed'):
+        config['ignore_previously_failed'] = True
     _save_config()
 
     if user == None or password == None:
