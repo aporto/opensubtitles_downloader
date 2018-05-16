@@ -280,7 +280,13 @@ def _download_subtitles_at_path(path, osub, languages, recursive):
     that downloads a subtitle whenever a video file is found
     '''
     global skipped_files
-    files = os.listdir(path)
+    if os.path.isfile(path):
+        # download a single file
+        recursive = False
+        files = [path]
+    else:
+        # download all files at this directory
+        files = os.listdir(path)
     files_to_search = []
     for f in files:
         full_path = os.path.join(path, f)
@@ -360,10 +366,9 @@ def download_subtitles(initial_path, user, password, languages, recursive = True
 
     print "Connecting to OpenSubtitles.org..."
     osub = OpenSubtitles()
+    time.sleep(0.1)
     for i in range(6):
         try:
-            time.sleep(1)
-            #t = 2 / 0
             token = osub.login(user, password)
 
             if token == None:
@@ -372,6 +377,7 @@ def download_subtitles(initial_path, user, password, languages, recursive = True
             else:
                 break
         except:
+            time.sleep(1)
             if i < 5:
                 print "---> Connection trial #%d failed" % (i+1)
             else:
