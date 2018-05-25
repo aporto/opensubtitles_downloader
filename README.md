@@ -3,6 +3,8 @@ This tool automatically downloads the correct subtitle for all your movies.
 
 You simply right-click the folder where your videos are saved, the select "Download subtitles". It will use an internal algorithm to detect the correct subtitle for each video file. If the exact subrtitle is not available, it will download the best available subtitle.
 
+You can also use it to automate the download for several other applications. For example, you can configure your torrent software to automatically download the best subtitle as soon as a torrent arrives.
+
 # Download
 1) Download the following zip file:
 [https://github.com/aporto/opensubtitles_downloader/archive/master.zip]
@@ -43,6 +45,19 @@ Example:
 python osd.py jose 123456 c:\movies pob eng
 ```
 This will search subtitles for every file found on c:\movies. It will try to find a Brazilian-Portuguese subtitle. If no one is found, it will search for an English version
+
+# Automating the torrents
+This instruction is for qBittorrent, but will be similar to most of other torrent clients. 
+
+* Open qBittorrent. On the main menu, select Tools -> Options
+* The Options window will open. On the left tool bar, select Downloads
+* Roll the right scrool bar up to the end, until you see the option "Run external program on torrent completion"
+* Check this option
+* Under this option, on the text field, type <PATH>\download_subtitle_no_pause.bat "%R"
+** Don't forget to keep the quotes aroung %R
+** Don't forget to substitute, on the text above, <PATH> to the real path for this file on your computer
+  
+![alt text](https://raw.githubusercontent.com/aporto/opensubtitles_downloader/master/images/qbittorrent_options.png)
 
 # Languages id
 Check the file config/languages.csv to find out the id for your language
