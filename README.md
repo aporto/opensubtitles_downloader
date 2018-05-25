@@ -54,8 +54,9 @@ This instruction is for qBittorrent, but will be similar to most of other torren
 * Roll the right scrool bar up to the end, until you see the option "Run external program on torrent completion"
 * Check this option
 * Under this option, on the text field, type <PATH>\download_subtitle_no_pause.bat "%R"
-** Don't forget to keep the quotes aroung %R
-** Don't forget to substitute, on the text above, <PATH> to the real path for this file on your computer
+* Don't forget to keep the quotes aroung %R
+* Don't forget to substitute, on the text above, <PATH> to the real path for this file on your computer
+* Press Ok to close the options window  
   
 ![alt text](https://raw.githubusercontent.com/aporto/opensubtitles_downloader/master/images/qbittorrent_options.png)
 
