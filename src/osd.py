@@ -326,9 +326,19 @@ def download_subtitles(initial_path, user, password, languages, recursive = True
     global config
     global failed_list
 
-    if os.path.isfile(config_file):
+    try:
+        #if os.path.isfile(config_file):
         with open(config_file) as f:
             config = json.load(f)
+    except:
+        config = {
+            'last_download_date': None,
+            'today_download_count': 0,
+            'username': '',
+            'password': '',
+            'languages': ['por', 'pob', 'eng'],
+            'initial_path': initial_path
+        }
 
     today = datetime.date.today().strftime("%Y%m%d")
     if config['last_download_date'] != today:
