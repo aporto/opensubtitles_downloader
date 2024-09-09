@@ -1,3 +1,9 @@
+#NOTICE:
+OpenSubtitles.org has changes its API and this code no longer works for downloading subtitles. For more information, check OpenSubtitles note on this:
+[https://trac.opensubtitles.org/projects/opensubtitles]
+
+This repository will be left here for education purposes, but remember that this will NOT work with OpenSubtitles until the code is updated to the new API.
+
 # OpenSubtitles Downloader
 This tool automatically downloads the correct subtitle for all your movies.
 
